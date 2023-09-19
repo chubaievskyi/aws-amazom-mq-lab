@@ -3,6 +3,7 @@ package com.chubaievskyi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Properties;
 
 public class Main {
@@ -24,9 +25,15 @@ public class Main {
         System.out.println(password);
         System.out.println(numberOfMessages);
 
+        UserGenerator userGenerator = new UserGenerator();
         for (int i = 0; i < 10; i++) {
-            User user = UserGenerator.generateRandomUser();
-            System.out.println(user.getName() + " " + user.getEddr() + " " + user.getCount() + " " + user.getCreatedAt());
+            String user = null;
+            try {
+                user = userGenerator.generateRandomUser();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println(user);
         }
 
         // TODO: власні валідатори (едрр)
@@ -36,8 +43,6 @@ public class Main {
         // TODO: кілька консюмерів
         // TODO: декілька потоків
         // TODO: мільйон меседжів за адекватний час
-        // TODO: поджо месседж в форматі джейсон (бібліотека джексон)
-
 
         // кількість продюсерів та кількість консмерів у проперті для того щоб знати скільки пойзенпілів використовувати
         // едвайзер меседж (в ідеалі один пойзен піл і всі його ловлять)

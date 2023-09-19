@@ -1,5 +1,4 @@
 target/
-logfiles/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -13,6 +12,7 @@ logfiles/
 *.iml
 *.ipr
 /.idea
+/logfiles
 
 ### Eclipse ###
 .apt_generated

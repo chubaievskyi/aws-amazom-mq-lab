@@ -1,36 +1,52 @@
 package com.chubaievskyi;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import java.time.LocalDate;
 import java.util.Random;
+import java.io.IOException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.javafaker.Faker;
 
 public class UserGenerator {
-    public static User generateRandomUser() {
-        Random random = new Random();
-        LocalDate currentDate = LocalDate.now();
 
-        // Генеруємо випадкову довжину імені від 1 до 25 символів
-        int nameLength = random.nextInt(15) + 1;
-        // Генеруємо випадкове ім'я заданої довжини
-        String randomName = RandomStringUtils.randomAlphabetic(nameLength);
+    private final Faker faker;
+    private final ObjectMapper objectMapper;
+    private final Random random;
 
-        // Генеруємо випадковий erdd, складається з 13 цифр
-        String randomEddr = RandomStringUtils.randomNumeric(13);
+    private static final int MIN_BIRTH_YEAR = 1920;
+    private static final int MAX_BIRTH_YEAR = 2019;
+    private static final int MAX_MONTH = 12;
+    private static final int MAX_DAY = 31;
+    private static final int MIN_COUNT = 0;
+    private static final int MAX_COUNT = 1000;
 
-        // Генеруємо випадкову дату від 1900 року до сьогодні
-        int minYear = 1900;
-        int maxYear = currentDate.getYear();
-        int randomYear = random.nextInt(maxYear - minYear + 1) + minYear;
-        int randomDayOfYear = random.nextInt(currentDate.lengthOfYear()) + 1; // +1 для уникнення нульового значення
+    public UserGenerator() {
+        this.faker = new Faker();
+        this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        this.random = new Random();
+    }
 
-        LocalDate randomDate = LocalDate.ofYearDay(randomYear, randomDayOfYear);
+    public String generateRandomUser() throws IOException {
 
-        return new User(
-                randomName,    // Генеруємо випадкове ім'я
-                randomEddr,    // Генеруємо випадковий erdd
-                random.nextInt(100),  // Генеруємо випадкове число від 0 до 99
-                randomDate  // Генеруємо випадкову дату
-        );
+        String name = faker.name().fullName();
+        String eddr = generateRandomEddr();
+        int count = faker.number().numberBetween(MIN_COUNT, MAX_COUNT);
+        LocalDate createdAt = LocalDate.now();
+
+        User user = new User(name, eddr, count, createdAt);
+
+        return objectMapper.writeValueAsString(user);
+    }
+
+    private String generateRandomEddr() {
+
+        int year = random.nextInt(MAX_BIRTH_YEAR - MIN_BIRTH_YEAR + 1) + MIN_BIRTH_YEAR;
+        int month = random.nextInt(MAX_MONTH) + 1;
+        int day = random.nextInt(MAX_DAY) + 1;
+
+        String restOfEddr = faker.numerify("#####");
+
+        return String.format("%04d%02d%02d-%s", year, month, day, restOfEddr);
     }
 }
