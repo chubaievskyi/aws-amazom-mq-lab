@@ -16,14 +16,14 @@ public class PropertiesLoader {
 
     public Properties loadProperties() {
         try {
-            InputStream externalInput = Main.class.getClassLoader().getResourceAsStream("config.properties");
-            if (externalInput != null) {
-                properties.load(externalInput);
-                LOGGER.info("Loaded properties from external file config.properties");
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            InputStream input = classLoader.getResourceAsStream("config.properties");
+
+            if (input != null) {
+                properties.load(input);
+                LOGGER.info("Loaded properties from config.properties in classpath");
             } else {
-                InputStream internalInput = Main.class.getClassLoader().getResourceAsStream("config.properties");
-                properties.load(internalInput);
-                LOGGER.info("Loaded properties from the internal file config.properties");
+                LOGGER.info("config.properties not found in classpath, please check the classpath and file .properties");
             }
         } catch (IOException e) {
             LOGGER.error("Failed to read properties from file.", e);
@@ -31,6 +31,24 @@ public class PropertiesLoader {
 
         return properties;
     }
+
+//    public Properties loadProperties() {
+//        try {
+//            InputStream externalInput = Main.class.getClassLoader().getResourceAsStream("config.properties");
+//            if (externalInput != null) {
+//                properties.load(externalInput);
+//                LOGGER.info("Loaded properties from external file config.properties");
+//            } else {
+//                InputStream internalInput = Main.class.getClassLoader().getResourceAsStream("config.properties");
+//                properties.load(internalInput);
+//                LOGGER.info("Loaded properties from the internal file config.properties");
+//            }
+//        } catch (IOException e) {
+//            LOGGER.error("Failed to read properties from file.", e);
+//        }
+//
+//        return properties;
+//    }
 
 //    public Properties loadProperties() {
 //        try {
