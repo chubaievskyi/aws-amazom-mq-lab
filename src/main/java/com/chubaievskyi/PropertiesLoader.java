@@ -21,9 +21,9 @@ public class PropertiesLoader {
                 properties.load(externalInput);
                 LOGGER.info("Loaded properties from external file config.properties");
             } else {
-                InputStream internalInput = Main.class.getClassLoader().getResourceAsStream("internal-config.properties");
+                InputStream internalInput = Main.class.getClassLoader().getResourceAsStream("config.properties");
                 properties.load(internalInput);
-                LOGGER.info("Loaded properties from the internal file internal-config.properties");
+                LOGGER.info("Loaded properties from the internal file config.properties");
             }
         } catch (IOException e) {
             LOGGER.error("Failed to read properties from file.", e);
@@ -39,9 +39,9 @@ public class PropertiesLoader {
 //                properties.load(externalInput);
 //                LOGGER.info("Loaded properties from external file config.properties");
 //            } else {
-//                InputStream internalInput = getClass().getResourceAsStream("/internal-config.properties");
+//                InputStream internalInput = getClass().getResourceAsStream("/config.properties");
 //                properties.load(internalInput);
-//                LOGGER.info("Loaded properties from the internal file internal-config.properties");
+//                LOGGER.info("Loaded properties from the internal file config.properties");
 //            }
 //        } catch (IOException e) {
 //            LOGGER.error("Failed to read properties from file.", e);
