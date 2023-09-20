@@ -14,15 +14,19 @@ public class Main {
         LOGGER.info("Program start!");
 
         Properties properties = new PropertiesLoader().loadProperties();
-        InputReader inputReader = new InputReader(properties, args);
+        InputReader inputReader = new InputReader(properties);
         String wireLevelEndpoint = inputReader.getWireLevelEndpoint();
         String username = inputReader.getUsername();
         String password = inputReader.getPassword();
+        String queueName = inputReader.getQueueName();
+        String stopTime = inputReader.getStopTime();
         int numberOfMessages = inputReader.getNumberOfMessages();
 
         System.out.println(wireLevelEndpoint);
         System.out.println(username);
         System.out.println(password);
+        System.out.println(queueName);
+        System.out.println(stopTime);
         System.out.println(numberOfMessages);
 
         UserGenerator userGenerator = new UserGenerator();
@@ -43,6 +47,9 @@ public class Main {
         // TODO: кілька консюмерів
         // TODO: декілька потоків
         // TODO: мільйон меседжів за адекватний час
+        // TODO: подивитися іншу бібліотеку для генерації імен
+        // TODO: швидкість продюсера
+        // TODO: швидкість консюмера
 
 
 
