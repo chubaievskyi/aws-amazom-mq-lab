@@ -13,6 +13,8 @@ public class Main {
     public static void main(String[] args) {
         LOGGER.info("Program start!");
 
+
+
         Properties properties = new PropertiesLoader().loadProperties();
         InputReader inputReader = new InputReader(properties);
         String wireLevelEndpoint = inputReader.getWireLevelEndpoint();
@@ -56,5 +58,7 @@ public class Main {
         // кількість продюсерів та кількість консмерів у проперті для того щоб знати скільки пойзенпілів використовувати
         // едвайзер меседж (в ідеалі один пойзен піл і всі його ловлять)
         // visualVM дивитися як себе поводять треди
+
+        LOGGER.info("End of program!");
     }
 }
