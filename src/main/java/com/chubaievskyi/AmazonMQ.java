@@ -22,17 +22,40 @@ public class AmazonMQ {
     private static final String STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
 
-    public static void main(String[] args) throws JMSException, IOException {
+    public static void main(String[] args) {
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
 
-        sendMessage(pooledConnectionFactory);
-        receiveMessage(connectionFactory);
+        Thread producerThread = new Thread(() -> {
+            try {
+                sendMessage(pooledConnectionFactory);
+            } catch (JMSException | IOException e) {
+                LOGGER.debug("Error sending a message.", e);
+            }
+        });
+
+        Thread consumerThread = new Thread(() -> {
+            try {
+                receiveMessage(connectionFactory);
+            } catch (JMSException e) {
+                LOGGER.debug("Error receiving a message.", e);
+            }
+        });
+
+        producerThread.start();
+        consumerThread.start();
+
+        try {
+            producerThread.join();
+            consumerThread.join();
+        } catch (InterruptedException e) {
+            LOGGER.debug("The current thread has been interrupted.", e);
+            Thread.currentThread().interrupt();
+        }
         pooledConnectionFactory.stop();
     }
 
     private static void sendMessage(PooledConnectionFactory pooledConnectionFactory) throws JMSException, IOException {
-
         Connection producerConnection = pooledConnectionFactory.createConnection();
         producerConnection.start();
         LOGGER.info("Connection with the producer is established.");
@@ -47,12 +70,29 @@ public class AmazonMQ {
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         LOGGER.info("Created a producer from the session to the queue.");
 
-        String text = USER_GENERATOR.generateRandomUser();
-        TextMessage producerMessage = producerSession.createTextMessage(text);
-        LOGGER.info("Message created.");
+        int count = 0;
+        long time = System.currentTimeMillis() + (Long.parseLong(STOP_TIME) * 1000);
+        for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                LOGGER.debug("Producer is interrupted.");
+                break;
+            }
 
-        producer.send(producerMessage);
-        LOGGER.info("Message sent.");
+            String text = USER_GENERATOR.generateRandomUser();
+            TextMessage producerMessage = producerSession.createTextMessage(text);
+            LOGGER.info("Message created: {}", text);
+
+            producer.send(producerMessage);
+            LOGGER.info("Message sent: {}", text);
+            count++;
+
+            if (System.currentTimeMillis() >= time || count == NUMBER_OF_MESSAGES) {
+                TextMessage poisonPill = producerSession.createTextMessage("Poison Pill");
+                producer.send(poisonPill);
+                LOGGER.info("Poison Pill sent to signal the end of production.");
+            }
+
+        }
 
         producer.close();
         producerSession.close();
@@ -60,7 +100,6 @@ public class AmazonMQ {
     }
 
     private static void receiveMessage(ActiveMQConnectionFactory connectionFactory) throws JMSException {
-
         Connection consumerConnection = connectionFactory.createConnection();
         consumerConnection.start();
         LOGGER.info("Connection with the consumer is established.");
@@ -74,11 +113,19 @@ public class AmazonMQ {
         MessageConsumer consumer = consumerSession.createConsumer(consumerDestination);
         LOGGER.info("Created a message consumer from the session to the queue.");
 
-        Message consumerMessage = consumer.receive(1000);
-        LOGGER.info("Started waiting for a message.");
+        while (true) {
+            Message consumerMessage = consumer.receive(1000); // Wait for a message
+            if (consumerMessage instanceof TextMessage) {
+                TextMessage consumerTextMessage = (TextMessage) consumerMessage;
+                String messageText = consumerTextMessage.getText();
+                LOGGER.info("Message received: {}", messageText);
 
-        TextMessage consumerTextMessage = (TextMessage) consumerMessage;
-        LOGGER.info("Message received: {}", consumerTextMessage.getText());
+                if ("Poison Pill".equals(messageText)) {
+                    LOGGER.info("Received Poison Pill. Exiting consumer.");
+                    break;
+                }
+            }
+        }
 
         consumer.close();
         consumerSession.close();
