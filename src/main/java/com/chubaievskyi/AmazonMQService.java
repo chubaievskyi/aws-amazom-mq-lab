@@ -10,7 +10,7 @@ import java.util.Properties;
 
 import static com.chubaievskyi.Main.LOGGER;
 
-public class AmazonMQ {
+public class AmazonMQService {
 
     private static final UserGenerator USER_GENERATOR = new UserGenerator();
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
@@ -22,7 +22,14 @@ public class AmazonMQ {
     private static final String STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
 
-    public static void main(String[] args) {
+    private int sendMessageCounter;
+    private int receiveMessageCounter;
+    private double startTimeProducer;
+    private double endTimeProducer;
+    private double startTimeConsumer;
+    private double endTimeConsumer;
+
+    public void run() {
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
 
@@ -53,9 +60,23 @@ public class AmazonMQ {
             Thread.currentThread().interrupt();
         }
         pooledConnectionFactory.stop();
+
+        double producerTime = (endTimeProducer - startTimeProducer) / 1000;
+        LOGGER.info("Producer time (sec) - {}", producerTime);
+        LOGGER.info("Number of sent messages - {}", sendMessageCounter);
+        double consumerTime = (endTimeConsumer - startTimeConsumer) / 1000;
+        LOGGER.info("Consumer time (sec) - {}", consumerTime);
+        LOGGER.info("Number of received messages - {}", receiveMessageCounter);
+
+        double averageEndingSpeed = sendMessageCounter / producerTime;
+        double averageReceivingSpeed = receiveMessageCounter / consumerTime;
+        String formattedAverageEndingSpeed = String.format("%.2f", averageEndingSpeed);
+        String formattedAverageReceivingSpeed = String.format("%.2f", averageReceivingSpeed);
+        LOGGER.info("Average speed of sending messages (messages per second) - {}", formattedAverageEndingSpeed);
+        LOGGER.info("Average speed of receiving messages (messages per second) - {}", formattedAverageReceivingSpeed);
     }
 
-    private static void sendMessage(PooledConnectionFactory pooledConnectionFactory) throws JMSException, IOException {
+    private void sendMessage(PooledConnectionFactory pooledConnectionFactory) throws JMSException, IOException {
         Connection producerConnection = pooledConnectionFactory.createConnection();
         producerConnection.start();
         LOGGER.info("Connection with the producer is established.");
@@ -70,8 +91,8 @@ public class AmazonMQ {
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         LOGGER.info("Created a producer from the session to the queue.");
 
-        int count = 0;
-        long time = System.currentTimeMillis() + (Long.parseLong(STOP_TIME) * 1000);
+        startTimeProducer = System.currentTimeMillis();
+        long finalTime = System.currentTimeMillis() + (Long.parseLong(STOP_TIME) * 1000);
         for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
             if (Thread.currentThread().isInterrupted()) {
                 LOGGER.debug("Producer is interrupted.");
@@ -84,22 +105,22 @@ public class AmazonMQ {
 
             producer.send(producerMessage);
             LOGGER.info("Message sent: {}", text);
-            count++;
+            sendMessageCounter++;
 
-            if (System.currentTimeMillis() >= time || count == NUMBER_OF_MESSAGES) {
+            if (System.currentTimeMillis() >= finalTime || sendMessageCounter == NUMBER_OF_MESSAGES) {
                 TextMessage poisonPill = producerSession.createTextMessage("Poison Pill");
                 producer.send(poisonPill);
                 LOGGER.info("Poison Pill sent to signal the end of production.");
             }
 
         }
-
+        endTimeProducer = System.currentTimeMillis();
         producer.close();
         producerSession.close();
         producerConnection.close();
     }
 
-    private static void receiveMessage(ActiveMQConnectionFactory connectionFactory) throws JMSException {
+    private void receiveMessage(ActiveMQConnectionFactory connectionFactory) throws JMSException {
         Connection consumerConnection = connectionFactory.createConnection();
         consumerConnection.start();
         LOGGER.info("Connection with the consumer is established.");
@@ -113,12 +134,14 @@ public class AmazonMQ {
         MessageConsumer consumer = consumerSession.createConsumer(consumerDestination);
         LOGGER.info("Created a message consumer from the session to the queue.");
 
+        startTimeConsumer = System.currentTimeMillis();
         while (true) {
             Message consumerMessage = consumer.receive(1000); // Wait for a message
             if (consumerMessage instanceof TextMessage) {
                 TextMessage consumerTextMessage = (TextMessage) consumerMessage;
                 String messageText = consumerTextMessage.getText();
                 LOGGER.info("Message received: {}", messageText);
+                receiveMessageCounter++;
 
                 if ("Poison Pill".equals(messageText)) {
                     LOGGER.info("Received Poison Pill. Exiting consumer.");
@@ -126,13 +149,13 @@ public class AmazonMQ {
                 }
             }
         }
-
+        endTimeConsumer = System.currentTimeMillis();
         consumer.close();
         consumerSession.close();
         consumerConnection.close();
     }
 
-    private static ActiveMQConnectionFactory createActiveMQConnectionFactory() {
+    private ActiveMQConnectionFactory createActiveMQConnectionFactory() {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(WIRE_LEVEL_ENDPOINT);
         connectionFactory.setTrustedPackages(List.of("com.chubaievskyi"));
         LOGGER.info("Created a connection factory.");
@@ -142,7 +165,7 @@ public class AmazonMQ {
         return connectionFactory;
     }
 
-    private static PooledConnectionFactory createPooledConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
+    private PooledConnectionFactory createPooledConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
         PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
         pooledConnectionFactory.setConnectionFactory(connectionFactory);
         pooledConnectionFactory.setMaxConnections(10);
