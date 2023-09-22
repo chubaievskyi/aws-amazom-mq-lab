@@ -3,9 +3,6 @@ package com.chubaievskyi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.Properties;
-
 public class Main {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
@@ -14,33 +11,35 @@ public class Main {
         LOGGER.info("Program start!");
 
 
+        AmazonMQService amazonMQService = new AmazonMQService();
+        amazonMQService.run();
 
-        Properties properties = new PropertiesLoader().loadProperties();
-        InputReader inputReader = new InputReader(properties);
-        String wireLevelEndpoint = inputReader.getWireLevelEndpoint();
-        String username = inputReader.getUsername();
-        String password = inputReader.getPassword();
-        String queueName = inputReader.getQueueName();
-        String stopTime = inputReader.getStopTime();
-        int numberOfMessages = inputReader.getNumberOfMessages();
-
-        System.out.println(wireLevelEndpoint);
-        System.out.println(username);
-        System.out.println(password);
-        System.out.println(queueName);
-        System.out.println(stopTime);
-        System.out.println(numberOfMessages);
-
-        UserGenerator userGenerator = new UserGenerator();
-        for (int i = 0; i < 10; i++) {
-            String user = null;
-            try {
-                user = userGenerator.generateRandomUser();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println(user);
-        }
+//        Properties properties = new PropertiesLoader().loadProperties();
+//        InputReader inputReader = new InputReader(properties);
+//        String wireLevelEndpoint = inputReader.getWireLevelEndpoint();
+//        String username = inputReader.getUsername();
+//        String password = inputReader.getPassword();
+//        String queueName = inputReader.getQueueName();
+//        String stopTime = inputReader.getStopTime();
+//        int numberOfMessages = inputReader.getNumberOfMessages();
+//
+//        System.out.println(wireLevelEndpoint);
+//        System.out.println(username);
+//        System.out.println(password);
+//        System.out.println(queueName);
+//        System.out.println(stopTime);
+//        System.out.println(numberOfMessages);
+//
+//        UserGenerator userGenerator = new UserGenerator();
+//        for (int i = 0; i < 10; i++) {
+//            String user = null;
+//            try {
+//                user = userGenerator.generateRandomUser();
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//            System.out.println(user);
+//        }
 
         // TODO: власні валідатори (едрр)
         // TODO: продюсер
