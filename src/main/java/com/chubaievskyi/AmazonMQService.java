@@ -33,7 +33,6 @@ public class AmazonMQService {
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
 
-        LOGGER.debug("//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////");
         Thread producerThread = new Thread(() -> {
             try {
                 sendMessage(pooledConnectionFactory);
@@ -41,7 +40,7 @@ public class AmazonMQService {
                 LOGGER.debug("Error sending a message.", e);
             }
         });
-        LOGGER.debug("//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////");
+
         Thread consumerThread = new Thread(() -> {
             try {
                 receiveMessage(connectionFactory);
@@ -49,11 +48,9 @@ public class AmazonMQService {
                 LOGGER.debug("Error receiving a message.", e);
             }
         });
-        LOGGER.debug("//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////");
 
         producerThread.start();
         consumerThread.start();
-        LOGGER.debug("//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////");
 
         try {
             producerThread.join();
@@ -62,12 +59,8 @@ public class AmazonMQService {
             LOGGER.debug("The current thread has been interrupted.", e);
             Thread.currentThread().interrupt();
         }
-        LOGGER.debug("//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////");
 
         pooledConnectionFactory.stop();
-
-        LOGGER.debug("//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////");
-        LOGGER.debug("//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////");
 
         double producerTime = (endTimeProducer - startTimeProducer) / 1000;
         LOGGER.info("Producer time (sec) - {}", producerTime);
