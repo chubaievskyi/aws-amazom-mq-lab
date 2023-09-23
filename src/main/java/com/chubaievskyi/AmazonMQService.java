@@ -15,9 +15,12 @@ public class AmazonMQService {
     private static final UserGenerator USER_GENERATOR = new UserGenerator();
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
     private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
-    private static final String WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
-    private static final String USER_NAME = INPUT_READER.getUsername();
-    private static final String PASSWORD = INPUT_READER.getPassword();
+//    private static final String WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
+    private static final String WIRE_LEVEL_ENDPOINT = "ssl://b-265a939d-40dc-4ee3-9abb-229e14589feb-1.mq.eu-central-1.amazonaws.com:61617";
+//    private static final String USER_NAME = INPUT_READER.getUsername();
+    private static final String USER_NAME = "user2";
+//    private static final String PASSWORD = INPUT_READER.getPassword();
+    private static final String PASSWORD = "user1234567890";
     private static final String QUEUE_NAME = INPUT_READER.getQueueName();
     private static final String STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
@@ -33,32 +36,32 @@ public class AmazonMQService {
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
 
-//        Thread producerThread = new Thread(() -> {
+        Thread producerThread = new Thread(() -> {
             try {
                 sendMessage(pooledConnectionFactory);
             } catch (JMSException | IOException e) {
                 LOGGER.debug("Error sending a message.", e);
             }
-//        });
+        });
 
-//        Thread consumerThread = new Thread(() -> {
+        Thread consumerThread = new Thread(() -> {
             try {
                 receiveMessage(connectionFactory);
             } catch (JMSException e) {
                 LOGGER.debug("Error receiving a message.", e);
             }
-//        });
+        });
 
-//        producerThread.start();
-//        consumerThread.start();
-//
-//        try {
-//            producerThread.join();
-//            consumerThread.join();
-//        } catch (InterruptedException e) {
-//            LOGGER.debug("The current thread has been interrupted.", e);
-//            Thread.currentThread().interrupt();
-//        }
+        producerThread.start();
+        consumerThread.start();
+
+        try {
+            producerThread.join();
+            consumerThread.join();
+        } catch (InterruptedException e) {
+            LOGGER.debug("The current thread has been interrupted.", e);
+            Thread.currentThread().interrupt();
+        }
 
         pooledConnectionFactory.stop();
 
