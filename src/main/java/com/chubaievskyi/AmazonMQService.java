@@ -15,15 +15,15 @@ public class AmazonMQService {
     private static final UserGenerator USER_GENERATOR = new UserGenerator();
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
     private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
-//    private static final String WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
+    private static final String WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
 //    private static final String WIRE_LEVEL_ENDPOINT = "ssl://b-265a939d-40dc-4ee3-9abb-229e14589feb-1.mq.eu-central-1.amazonaws.com:61617";
-    private static String WIRE_LEVEL_ENDPOINT;
-//    private static final String USER_NAME = INPUT_READER.getUsername();
+//    private static String WIRE_LEVEL_ENDPOINT;
+    private static final String USER_NAME = INPUT_READER.getUsername();
 //    private static final String USER_NAME = "user2";
-    private static String USER_NAME;
-//    private static final String PASSWORD = INPUT_READER.getPassword();
+//    private static String USER_NAME;
+    private static final String PASSWORD = INPUT_READER.getPassword();
 //    private static final String PASSWORD = "user1234567890";
-    private static String PASSWORD;
+//    private static String PASSWORD;
     private static final String QUEUE_NAME = INPUT_READER.getQueueName();
     private static final String STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
@@ -36,9 +36,17 @@ public class AmazonMQService {
     private double endTimeConsumer;
 
     public void run() {
-        WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
-        USER_NAME = INPUT_READER.getUsername();
-        PASSWORD = INPUT_READER.getPassword();
+//        WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
+//        USER_NAME = INPUT_READER.getUsername();
+//        PASSWORD = INPUT_READER.getPassword();
+
+        System.out.println("/////////////////////////////////////////////////////////////////////////////////////////");
+        System.out.println(WIRE_LEVEL_ENDPOINT);
+        System.out.println("/////////////////////////////////////////////////////////////////////////////////////////");
+        System.out.println(USER_NAME);
+        System.out.println("/////////////////////////////////////////////////////////////////////////////////////////");
+        System.out.println(PASSWORD);
+        System.out.println("/////////////////////////////////////////////////////////////////////////////////////////");
 
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
