@@ -27,6 +27,7 @@ public class PropertiesLoader {
             }
         } catch (IOException e) {
             LOGGER.error("Failed to read properties from file.", e);
+            System.exit(0);
         }
 
         return properties;
