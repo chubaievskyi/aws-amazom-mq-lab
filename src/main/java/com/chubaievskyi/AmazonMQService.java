@@ -33,32 +33,32 @@ public class AmazonMQService {
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
 
-        Thread producerThread = new Thread(() -> {
+//        Thread producerThread = new Thread(() -> {
             try {
                 sendMessage(pooledConnectionFactory);
             } catch (JMSException | IOException e) {
                 LOGGER.debug("Error sending a message.", e);
             }
-        });
+//        });
 
-        Thread consumerThread = new Thread(() -> {
+//        Thread consumerThread = new Thread(() -> {
             try {
                 receiveMessage(connectionFactory);
             } catch (JMSException e) {
                 LOGGER.debug("Error receiving a message.", e);
             }
-        });
+//        });
 
-        producerThread.start();
-        consumerThread.start();
-
-        try {
-            producerThread.join();
-            consumerThread.join();
-        } catch (InterruptedException e) {
-            LOGGER.debug("The current thread has been interrupted.", e);
-            Thread.currentThread().interrupt();
-        }
+//        producerThread.start();
+//        consumerThread.start();
+//
+//        try {
+//            producerThread.join();
+//            consumerThread.join();
+//        } catch (InterruptedException e) {
+//            LOGGER.debug("The current thread has been interrupted.", e);
+//            Thread.currentThread().interrupt();
+//        }
 
         pooledConnectionFactory.stop();
 
