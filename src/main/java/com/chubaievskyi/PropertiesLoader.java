@@ -24,10 +24,10 @@ public class PropertiesLoader {
                 LOGGER.info("Loaded properties from config.properties in classpath");
             } else {
                 LOGGER.info("config.properties not found in classpath, please check the classpath and file .properties");
+                System.exit(0);
             }
         } catch (IOException e) {
             LOGGER.error("Failed to read properties from file.", e);
-            System.exit(0);
         }
 
         return properties;
