@@ -26,12 +26,12 @@ public class AmazonMQService {
     private static final String STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
     private static final int NUMBER_OF_PRODUCER = 4;
-    private static final int NUMBER_OF_CONSUMER = 3;
+    private static final int NUMBER_OF_CONSUMER = 1;
 
     private final AtomicInteger sendMessageCounter = new AtomicInteger(0);
-    private final AtomicInteger activeProducerCount = new AtomicInteger(NUMBER_OF_PRODUCER);
     private final AtomicInteger receiveMessageCounter = new AtomicInteger(0);
     private final AtomicInteger poisonPillCounter = new AtomicInteger(0);
+    private final AtomicInteger activeProducerCount = new AtomicInteger(NUMBER_OF_PRODUCER);
     private long startTimeProducer;
     private long startTimeConsumer;
     private long endTimeProducer;
@@ -112,6 +112,7 @@ public class AmazonMQService {
         LOGGER.info("Created a producer from the session to the queue.");
 
         long stopTimeProducer = startTimeProducer + (Long.parseLong(STOP_TIME) * 1000);
+        LOGGER.info("Start sending messages to the queue.");
         for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
             if (System.currentTimeMillis() >= stopTimeProducer || sendMessageCounter.get() == NUMBER_OF_MESSAGES) {
                 break;
@@ -129,6 +130,9 @@ public class AmazonMQService {
             producer.send(producerMessage);
             LOGGER.info("Message sent: {}", text);
 
+//            if (sendMessageCounter.get() % 1000 == 0) {
+//                LOGGER.info("{} message sent.", sendMessageCounter.get());
+//            }
         }
 
         int remainingProducers = activeProducerCount.decrementAndGet();
@@ -160,6 +164,7 @@ public class AmazonMQService {
         MessageConsumer consumer = consumerSession.createConsumer(consumerDestination);
         LOGGER.info("Created a message consumer from the session to the queue.");
 
+        LOGGER.info("Start reading messages from the queue.");
         while (true) { //poisonPillCounter != NUMBER_OF_PRODUCER
             Message consumerMessage = consumer.receive(1000); // Wait for a message
 
@@ -171,11 +176,17 @@ public class AmazonMQService {
                 TextMessage consumerTextMessage = (TextMessage) consumerMessage;
                 String messageText = consumerTextMessage.getText();
                 LOGGER.info("Message received: {}", messageText);
-                receiveMessageCounter.incrementAndGet();
+//                receiveMessageCounter.incrementAndGet();
+
+//                if (receiveMessageCounter.get() % 1000 == 0) {
+//                    LOGGER.info("{} message received.", receiveMessageCounter.get());
+//                }
 
                 if ("Poison Pill".equals(messageText)) {
                     poisonPillCounter.incrementAndGet();
-                    receiveMessageCounter.decrementAndGet();
+//                    receiveMessageCounter.decrementAndGet();
+                } else {
+                    receiveMessageCounter.incrementAndGet();
                 }
 
             }
