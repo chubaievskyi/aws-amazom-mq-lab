@@ -100,7 +100,7 @@
                                     <mainClass>com.chubaievskyi.Main</mainClass>
                                     <manifestEntries>
                                         <Multi-Release>true</Multi-Release>
-                                        <Class-Path>/opt/homework3/config</Class-Path>
+                                        <Class-Path>/opt/homework3/config/</Class-Path>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
