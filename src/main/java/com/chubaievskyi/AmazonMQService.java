@@ -26,13 +26,16 @@ public class AmazonMQService {
     private static final String STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
     private static final int NUMBER_OF_PRODUCER = 4;
-    private static final int NUMBER_OF_CONSUMER = 2;
+    private static final int NUMBER_OF_CONSUMER = 3;
 
     private final AtomicInteger sendMessageCounter = new AtomicInteger(0);
     private final AtomicInteger activeProducerCount = new AtomicInteger(NUMBER_OF_PRODUCER);
     private final AtomicInteger receiveMessageCounter = new AtomicInteger(0);
     private final AtomicInteger poisonPillCounter = new AtomicInteger(0);
     private long startTimeProducer;
+    private long startTimeConsumer;
+    private long endTimeProducer;
+    private long endTimeConsumer;
 
 
     public void run() {
@@ -54,7 +57,7 @@ public class AmazonMQService {
             });
         }
 
-        long startTimeConsumer = System.currentTimeMillis();
+        startTimeConsumer = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_CONSUMER; i++) {
             executorService.submit(() -> {
                 try {
@@ -67,14 +70,15 @@ public class AmazonMQService {
 
         executorService.shutdown();
         try {
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            if (!executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
+                // Якщо не всі потоки завершили роботу, то вжити відповідні заходи
+                LOGGER.error("Not all threads have terminated.");
+            }
         } catch (InterruptedException e) {
             LOGGER.debug("Executor service interrupted.", e);
             Thread.currentThread().interrupt();
         }
 
-        long endTimeProducer = System.currentTimeMillis();
-        long endTimeConsumer = System.currentTimeMillis();
         pooledConnectionFactory.stop();
 
         double producerTime = (double) (endTimeProducer - startTimeProducer) / 1000;
@@ -136,6 +140,7 @@ public class AmazonMQService {
             LOGGER.info("Poison Pill sent to signal the end of production.");
         }
 
+        endTimeProducer = System.currentTimeMillis();
         producer.close();
         producerSession.close();
         producerConnection.close();
@@ -176,6 +181,7 @@ public class AmazonMQService {
             }
         }
 
+        endTimeConsumer = System.currentTimeMillis();
         consumer.close();
         consumerSession.close();
         consumerConnection.close();
