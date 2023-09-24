@@ -7,6 +7,10 @@ import javax.jms.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.chubaievskyi.Main.LOGGER;
 
@@ -21,57 +25,67 @@ public class AmazonMQService {
     private static final String QUEUE_NAME = INPUT_READER.getQueueName();
     private static final String STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
+    private static final int NUMBER_OF_PRODUCER = 4;
+    private static final int NUMBER_OF_CONSUMER = 2;
 
-    private int sendMessageCounter;
-    private int receiveMessageCounter;
-    private double startTimeProducer;
-    private double endTimeProducer;
-    private double startTimeConsumer;
-    private double endTimeConsumer;
+    private final AtomicInteger sendMessageCounter = new AtomicInteger(0);
+    private final AtomicInteger activeProducerCount = new AtomicInteger(NUMBER_OF_PRODUCER);
+    private final AtomicInteger receiveMessageCounter = new AtomicInteger(0);
+    private final AtomicInteger poisonPillCounter = new AtomicInteger(0);
+    private long startTimeProducer;
+
 
     public void run() {
 
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
 
-        Thread producerThread = new Thread(() -> {
-            try {
-                sendMessage(pooledConnectionFactory);
-            } catch (JMSException | IOException e) {
-                LOGGER.debug("Error sending a message.", e);
-            }
-        });
 
-        Thread consumerThread = new Thread(() -> {
-            try {
-                receiveMessage(connectionFactory);
-            } catch (JMSException e) {
-                LOGGER.debug("Error receiving a message.", e);
-            }
-        });
+        ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_PRODUCER + NUMBER_OF_CONSUMER);
 
-        producerThread.start();
-        consumerThread.start();
+        startTimeProducer = System.currentTimeMillis();
+        for (int i = 0; i < NUMBER_OF_PRODUCER; i++) {
+            executorService.submit(() -> {
+                try {
+                    sendMessage(pooledConnectionFactory);
+                } catch (JMSException | IOException e) {
+                    LOGGER.debug("Error sending a message.", e);
+                }
+            });
+        }
 
+        long startTimeConsumer = System.currentTimeMillis();
+        for (int i = 0; i < NUMBER_OF_CONSUMER; i++) {
+            executorService.submit(() -> {
+                try {
+                    receiveMessage(connectionFactory);
+                } catch (JMSException e) {
+                    LOGGER.debug("Error receiving a message.", e);
+                }
+            });
+        }
+
+        executorService.shutdown();
         try {
-            producerThread.join();
-            consumerThread.join();
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
-            LOGGER.debug("The current thread has been interrupted.", e);
+            LOGGER.debug("Executor service interrupted.", e);
             Thread.currentThread().interrupt();
         }
 
+        long endTimeProducer = System.currentTimeMillis();
+        long endTimeConsumer = System.currentTimeMillis();
         pooledConnectionFactory.stop();
 
-        double producerTime = (endTimeProducer - startTimeProducer) / 1000;
+        double producerTime = (double) (endTimeProducer - startTimeProducer) / 1000;
         LOGGER.info("Producer time (sec) - {}", producerTime);
         LOGGER.info("Number of sent messages - {}", sendMessageCounter);
-        double consumerTime = (endTimeConsumer - startTimeConsumer) / 1000;
+        double consumerTime = (double) (endTimeConsumer - startTimeConsumer) / 1000;
         LOGGER.info("Consumer time (sec) - {}", consumerTime);
         LOGGER.info("Number of received messages - {}", receiveMessageCounter);
 
-        double averageEndingSpeed = sendMessageCounter / producerTime;
-        double averageReceivingSpeed = receiveMessageCounter / consumerTime;
+        double averageEndingSpeed = sendMessageCounter.get() / producerTime;
+        double averageReceivingSpeed = receiveMessageCounter.get() / consumerTime;
         String formattedAverageEndingSpeed = String.format("%.2f", averageEndingSpeed);
         String formattedAverageReceivingSpeed = String.format("%.2f", averageReceivingSpeed);
         LOGGER.info("Average speed of sending messages (messages per second) - {}", formattedAverageEndingSpeed);
@@ -93,30 +107,35 @@ public class AmazonMQService {
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         LOGGER.info("Created a producer from the session to the queue.");
 
-        startTimeProducer = System.currentTimeMillis();
-        long finalTime = System.currentTimeMillis() + (Long.parseLong(STOP_TIME) * 1000);
+        long stopTimeProducer = startTimeProducer + (Long.parseLong(STOP_TIME) * 1000);
         for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
+            if (System.currentTimeMillis() >= stopTimeProducer || sendMessageCounter.get() == NUMBER_OF_MESSAGES) {
+                break;
+            }
             if (Thread.currentThread().isInterrupted()) {
                 LOGGER.debug("Producer is interrupted.");
                 break;
             }
 
+            sendMessageCounter.incrementAndGet();
             String text = USER_GENERATOR.generateRandomUser();
             TextMessage producerMessage = producerSession.createTextMessage(text);
             LOGGER.info("Message created: {}", text);
 
             producer.send(producerMessage);
             LOGGER.info("Message sent: {}", text);
-            sendMessageCounter++;
-
-            if (System.currentTimeMillis() >= finalTime || sendMessageCounter == NUMBER_OF_MESSAGES) {
-                TextMessage poisonPill = producerSession.createTextMessage("Poison Pill");
-                producer.send(poisonPill);
-                LOGGER.info("Poison Pill sent to signal the end of production.");
-            }
 
         }
-        endTimeProducer = System.currentTimeMillis();
+
+        int remainingProducers = activeProducerCount.decrementAndGet();
+        if (remainingProducers == 0) {
+            for (int i = 0; i < NUMBER_OF_PRODUCER; i++) {
+                TextMessage poisonPill = producerSession.createTextMessage("Poison Pill");
+                producer.send(poisonPill);
+            }
+            LOGGER.info("Poison Pill sent to signal the end of production.");
+        }
+
         producer.close();
         producerSession.close();
         producerConnection.close();
@@ -136,22 +155,27 @@ public class AmazonMQService {
         MessageConsumer consumer = consumerSession.createConsumer(consumerDestination);
         LOGGER.info("Created a message consumer from the session to the queue.");
 
-        startTimeConsumer = System.currentTimeMillis();
-        while (true) {
+        while (true) { //poisonPillCounter != NUMBER_OF_PRODUCER
             Message consumerMessage = consumer.receive(1000); // Wait for a message
+
+            if (poisonPillCounter.get() == NUMBER_OF_PRODUCER) {
+                LOGGER.info("Received Poison Pill. Exiting consumer.");
+                break;
+            }
             if (consumerMessage instanceof TextMessage) {
                 TextMessage consumerTextMessage = (TextMessage) consumerMessage;
                 String messageText = consumerTextMessage.getText();
                 LOGGER.info("Message received: {}", messageText);
-                receiveMessageCounter++;
+                receiveMessageCounter.incrementAndGet();
 
                 if ("Poison Pill".equals(messageText)) {
-                    LOGGER.info("Received Poison Pill. Exiting consumer.");
-                    break;
+                    poisonPillCounter.incrementAndGet();
+                    receiveMessageCounter.decrementAndGet();
                 }
+
             }
         }
-        endTimeConsumer = System.currentTimeMillis();
+
         consumer.close();
         consumerSession.close();
         consumerConnection.close();
