@@ -25,7 +25,7 @@ public class AmazonMQService {
     private static final String QUEUE_NAME = INPUT_READER.getQueueName();
     private static final String STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
-    private static final int NUMBER_OF_PRODUCER = 4;
+    private static final int NUMBER_OF_PRODUCER = 5;
     private static final int NUMBER_OF_CONSUMER = 2;
 
     private final AtomicInteger sendMessageCounter = new AtomicInteger(0);
@@ -43,6 +43,35 @@ public class AmazonMQService {
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
 
+
+//        Thread producerThread = new Thread(() -> {
+//            try {
+//                sendMessage(pooledConnectionFactory);
+//            } catch (JMSException | IOException e) {
+//                LOGGER.debug("Error sending a message.", e);
+//            }
+//        });
+//
+//        Thread consumerThread = new Thread(() -> {
+//            try {
+//                receiveMessage(connectionFactory);
+//            } catch (JMSException e) {
+//                LOGGER.debug("Error receiving a message.", e);
+//            }
+//        });
+//
+//        startTimeProducer = System.currentTimeMillis();
+//        producerThread.start();
+//        startTimeConsumer = System.currentTimeMillis();
+//        consumerThread.start();
+//
+//        try {
+//            producerThread.join();
+//            consumerThread.join();
+//        } catch (InterruptedException e) {
+//            LOGGER.debug("The current thread has been interrupted.", e);
+//            Thread.currentThread().interrupt();
+//        }
 
         ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_PRODUCER + NUMBER_OF_CONSUMER);
 
