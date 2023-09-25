@@ -115,27 +115,14 @@ public class AmazonMQService {
                 break;
             }
 
-//            if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
-//                LOGGER.info("{} message sent.", sendMessageCounter.get());
-//
-//            }
-
-//            String text = USER_GENERATOR.generateRandomUser();
-//            producer.send(producerSession.createTextMessage(text));
-
-
             String text = USER_GENERATOR.generateRandomUser();
             TextMessage producerMessage = producerSession.createTextMessage(text);
-//            LOGGER.info("Message created: {}", text);
             producer.send(producerMessage);
-//            LOGGER.info("Message sent: {}", text);
 
             if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
                 LOGGER.info("Message sent: {}", text);
-
+//                LOGGER.info("{} message sent.", sendMessageCounter.get());
             }
-
-
         }
 
         int remainingProducers = activeProducerCount.decrementAndGet();
@@ -181,21 +168,6 @@ public class AmazonMQService {
                 LOGGER.info("Message received: {}", messageText);
 //                LOGGER.info("{} message received.", receiveMessageCounter.get());
             }
-
-//            Message consumerMessage = consumer.receive(1000); // Wait for a message
-//            if (consumerMessage instanceof TextMessage) {
-//                TextMessage consumerTextMessage = (TextMessage) consumerMessage;
-//                String messageText = consumerTextMessage.getText();
-//
-//                if ("Poison Pill".equals(messageText)) {
-//                    LOGGER.info("Received Poison Pill. Exiting consumer.");
-//                    break;
-//                }
-//                if (receiveMessageCounter.incrementAndGet() % 10000 == 0) {
-//                    LOGGER.info("{} message received.", receiveMessageCounter.get());
-//                }
-//
-//            }
         }
 
         endTimeConsumer = System.currentTimeMillis();
