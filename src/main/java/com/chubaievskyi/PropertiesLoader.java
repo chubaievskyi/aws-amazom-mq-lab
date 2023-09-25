@@ -16,7 +16,6 @@ public class PropertiesLoader {
 
     public Properties loadProperties() {
         try {
-//            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties");
 
             if (input != null) {
