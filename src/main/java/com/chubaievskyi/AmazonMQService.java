@@ -25,7 +25,7 @@ public class AmazonMQService {
     private static final String QUEUE_NAME = INPUT_READER.getQueueName();
     private static final String STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
-    private static final int NUMBER_OF_PRODUCER = 5;
+    private static final int NUMBER_OF_PRODUCER = 4;
     private static final int NUMBER_OF_CONSUMER = 2;
 
     private final AtomicInteger sendMessageCounter = new AtomicInteger(0);
@@ -115,10 +115,11 @@ public class AmazonMQService {
                 break;
             }
 
-            if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
-                LOGGER.info("{} message sent.", sendMessageCounter.get());
-            }
+//            if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
+//                LOGGER.info("{} message sent.", sendMessageCounter.get());
 //
+//            }
+
 //            String text = USER_GENERATOR.generateRandomUser();
 //            producer.send(producerSession.createTextMessage(text));
 
@@ -128,6 +129,13 @@ public class AmazonMQService {
 //            LOGGER.info("Message created: {}", text);
             producer.send(producerMessage);
 //            LOGGER.info("Message sent: {}", text);
+
+            if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
+                LOGGER.info("Message sent: {}", text);
+
+            }
+
+
         }
 
         int remainingProducers = activeProducerCount.decrementAndGet();
@@ -168,8 +176,10 @@ public class AmazonMQService {
                 LOGGER.info("Received Poison Pill. Exiting consumer.");
                 break;
             }
+
             if (receiveMessageCounter.incrementAndGet() % 10000 == 0) {
-                LOGGER.info("{} message received.", receiveMessageCounter.get());
+                LOGGER.info("Message received: {}", messageText);
+//                LOGGER.info("{} message received.", receiveMessageCounter.get());
             }
 
 //            Message consumerMessage = consumer.receive(1000); // Wait for a message
