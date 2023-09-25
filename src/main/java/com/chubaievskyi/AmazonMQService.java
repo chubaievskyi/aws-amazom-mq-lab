@@ -5,7 +5,6 @@ import org.apache.activemq.jms.pool.PooledConnectionFactory;
 
 import javax.jms.*;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -31,52 +30,16 @@ public class AmazonMQService {
 
     private final AtomicInteger sendMessageCounter = new AtomicInteger(0);
     private final AtomicInteger receiveMessageCounter = new AtomicInteger(0);
-//    private final AtomicInteger poisonPillCounter = new AtomicInteger(0);
     private final AtomicInteger activeProducerCount = new AtomicInteger(NUMBER_OF_PRODUCER);
     private long startTimeProducer;
     private long startTimeConsumer;
     private long endTimeProducer;
     private long endTimeConsumer;
 
-    // Додав нову структуру для зберігання партій повідомлень.
-    private final List<Message> messageBatch = new ArrayList<>();
-    private static final int BATCH_SIZE = 10000;
-
-
     public void run() {
 
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
-
-
-//        Thread producerThread = new Thread(() -> {
-//            try {
-//                sendMessage(pooledConnectionFactory);
-//            } catch (JMSException | IOException e) {
-//                LOGGER.debug("Error sending a message.", e);
-//            }
-//        });
-//
-//        Thread consumerThread = new Thread(() -> {
-//            try {
-//                receiveMessage(connectionFactory);
-//            } catch (JMSException e) {
-//                LOGGER.debug("Error receiving a message.", e);
-//            }
-//        });
-//
-//        startTimeProducer = System.currentTimeMillis();
-//        producerThread.start();
-//        startTimeConsumer = System.currentTimeMillis();
-//        consumerThread.start();
-//
-//        try {
-//            producerThread.join();
-//            consumerThread.join();
-//        } catch (InterruptedException e) {
-//            LOGGER.debug("The current thread has been interrupted.", e);
-//            Thread.currentThread().interrupt();
-//        }
 
         ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_PRODUCER + NUMBER_OF_CONSUMER);
 
@@ -146,30 +109,25 @@ public class AmazonMQService {
 
         long stopTimeProducer = startTimeProducer + (Long.parseLong(STOP_TIME) * 1000);
         LOGGER.info("Start sending messages to the queue.");
-        while (sendMessageCounter.get() < NUMBER_OF_MESSAGES) {
-            if (System.currentTimeMillis() >= stopTimeProducer) {
-                break;
-            }
+        while (sendMessageCounter.get() < NUMBER_OF_MESSAGES || System.currentTimeMillis() >= stopTimeProducer) {
             if (Thread.currentThread().isInterrupted()) {
                 LOGGER.debug("Producer is interrupted.");
                 break;
             }
 
-//            sendMessageCounter.incrementAndGet();
-            String text = USER_GENERATOR.generateRandomUser();
-            TextMessage producerMessage = producerSession.createTextMessage(text);
-//            LOGGER.info("Message created: {}", text);
-
-            producer.send(producerMessage);
-//            LOGGER.info("Message sent: {}", text);
-
             if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
                 LOGGER.info("{} message sent.", sendMessageCounter.get());
             }
+//
+//            String text = USER_GENERATOR.generateRandomUser();
+//            producer.send(producerSession.createTextMessage(text));
 
-//            if (sendMessageCounter.get() % 10000 == 0) {
-//                LOGGER.info("{} message sent.", sendMessageCounter.get());
-//            }
+
+            String text = USER_GENERATOR.generateRandomUser();
+            TextMessage producerMessage = producerSession.createTextMessage(text);
+//            LOGGER.info("Message created: {}", text);
+            producer.send(producerMessage);
+//            LOGGER.info("Message sent: {}", text);
         }
 
         int remainingProducers = activeProducerCount.decrementAndGet();
@@ -203,41 +161,31 @@ public class AmazonMQService {
         LOGGER.info("Created a message consumer from the session to the queue.");
 
         LOGGER.info("Start reading messages from the queue.");
-        while (true) { //poisonPillCounter != NUMBER_OF_PRODUCER
-            Message consumerMessage = consumer.receive(1000); // Wait for a message
+        while (true) {
+            String messageText = ((TextMessage) consumer.receive()).getText();
 
-//            if (poisonPillCounter.get() == NUMBER_OF_PRODUCER) {
-//                LOGGER.info("Received Poison Pill. Exiting consumer.");
-//                break;
-//            }
-            if (consumerMessage instanceof TextMessage) {
-                TextMessage consumerTextMessage = (TextMessage) consumerMessage;
-                String messageText = consumerTextMessage.getText();
-//                receiveMessageCounter.incrementAndGet();
+            if ("Poison Pill".equals(messageText)) {
+                LOGGER.info("Received Poison Pill. Exiting consumer.");
+                break;
+            }
+            if (receiveMessageCounter.incrementAndGet() % 10000 == 0) {
+                LOGGER.info("{} message received.", receiveMessageCounter.get());
+            }
 
-//                if (receiveMessageCounter.get() % 10000 == 0) {
-//                    LOGGER.info("{} message received.", receiveMessageCounter.get());
-//                }
-
+//            Message consumerMessage = consumer.receive(1000); // Wait for a message
+//            if (consumerMessage instanceof TextMessage) {
+//                TextMessage consumerTextMessage = (TextMessage) consumerMessage;
+//                String messageText = consumerTextMessage.getText();
+//
 //                if ("Poison Pill".equals(messageText)) {
-////                    poisonPillCounter.incrementAndGet();
 //                    LOGGER.info("Received Poison Pill. Exiting consumer.");
 //                    break;
-////                    receiveMessageCounter.decrementAndGet();
-//                } else {
-////                    LOGGER.info("Message received: {}", messageText);
-//                    receiveMessageCounter.incrementAndGet();
 //                }
-
-                if ("Poison Pill".equals(messageText)) {
-                    LOGGER.info("Received Poison Pill. Exiting consumer.");
-                    break;
-                }
-                if (receiveMessageCounter.incrementAndGet() % 10000 == 0) {
-                    LOGGER.info("{} message received.", receiveMessageCounter.get());
-                }
-
-            }
+//                if (receiveMessageCounter.incrementAndGet() % 10000 == 0) {
+//                    LOGGER.info("{} message received.", receiveMessageCounter.get());
+//                }
+//
+//            }
         }
 
         endTimeConsumer = System.currentTimeMillis();
