@@ -5,6 +5,7 @@ import org.apache.activemq.jms.pool.PooledConnectionFactory;
 
 import javax.jms.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +37,10 @@ public class AmazonMQService {
     private long startTimeConsumer;
     private long endTimeProducer;
     private long endTimeConsumer;
+
+    // Додав нову структуру для зберігання партій повідомлень.
+    private final List<Message> messageBatch = new ArrayList<>();
+    private static final int BATCH_SIZE = 10000;
 
 
     public void run() {
@@ -142,7 +147,6 @@ public class AmazonMQService {
         long stopTimeProducer = startTimeProducer + (Long.parseLong(STOP_TIME) * 1000);
         LOGGER.info("Start sending messages to the queue.");
         while (sendMessageCounter.get() < NUMBER_OF_MESSAGES) {
-//        for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
             if (System.currentTimeMillis() >= stopTimeProducer) {
                 break;
             }
@@ -151,7 +155,7 @@ public class AmazonMQService {
                 break;
             }
 
-            sendMessageCounter.incrementAndGet();
+//            sendMessageCounter.incrementAndGet();
             String text = USER_GENERATOR.generateRandomUser();
             TextMessage producerMessage = producerSession.createTextMessage(text);
 //            LOGGER.info("Message created: {}", text);
@@ -159,9 +163,13 @@ public class AmazonMQService {
             producer.send(producerMessage);
 //            LOGGER.info("Message sent: {}", text);
 
-            if (sendMessageCounter.get() % 1000 == 0) {
+            if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
                 LOGGER.info("{} message sent.", sendMessageCounter.get());
             }
+
+//            if (sendMessageCounter.get() % 10000 == 0) {
+//                LOGGER.info("{} message sent.", sendMessageCounter.get());
+//            }
         }
 
         int remainingProducers = activeProducerCount.decrementAndGet();
@@ -178,6 +186,7 @@ public class AmazonMQService {
         producerSession.close();
         producerConnection.close();
     }
+
 
     private void receiveMessage(ActiveMQConnectionFactory connectionFactory) throws JMSException {
         Connection consumerConnection = connectionFactory.createConnection();
@@ -206,18 +215,26 @@ public class AmazonMQService {
                 String messageText = consumerTextMessage.getText();
 //                receiveMessageCounter.incrementAndGet();
 
-                if (receiveMessageCounter.get() % 10000 == 0) {
-                    LOGGER.info("{} message received.", receiveMessageCounter.get());
-                }
+//                if (receiveMessageCounter.get() % 10000 == 0) {
+//                    LOGGER.info("{} message received.", receiveMessageCounter.get());
+//                }
+
+//                if ("Poison Pill".equals(messageText)) {
+////                    poisonPillCounter.incrementAndGet();
+//                    LOGGER.info("Received Poison Pill. Exiting consumer.");
+//                    break;
+////                    receiveMessageCounter.decrementAndGet();
+//                } else {
+////                    LOGGER.info("Message received: {}", messageText);
+//                    receiveMessageCounter.incrementAndGet();
+//                }
 
                 if ("Poison Pill".equals(messageText)) {
-//                    poisonPillCounter.incrementAndGet();
                     LOGGER.info("Received Poison Pill. Exiting consumer.");
                     break;
-//                    receiveMessageCounter.decrementAndGet();
-                } else {
-//                    LOGGER.info("Message received: {}", messageText);
-                    receiveMessageCounter.incrementAndGet();
+                }
+                if (receiveMessageCounter.incrementAndGet() % 10000 == 0) {
+                    LOGGER.info("{} message received.", receiveMessageCounter.get());
                 }
 
             }
