@@ -14,7 +14,7 @@
 //
 //import static com.chubaievskyi.Main.LOGGER;
 //
-//public class AmazonMQService {
+//public class AmazonMQServicev1 {
 //
 //    private static final UserGenerator USER_GENERATOR = new UserGenerator();
 //    private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
@@ -23,10 +23,10 @@
 //    private static final String USER_NAME = INPUT_READER.getUsername();
 //    private static final String PASSWORD = INPUT_READER.getPassword();
 //    private static final String QUEUE_NAME = INPUT_READER.getQueueName();
-//    private static final long STOP_TIME = INPUT_READER.getStopTime();
+//    private static final String STOP_TIME = INPUT_READER.getStopTime();
 //    private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
-//    private static final int NUMBER_OF_PRODUCER = INPUT_READER.getNumberOfProducer();
-//    private static final int NUMBER_OF_CONSUMER = INPUT_READER.getNumberOfConsumer();
+//    private static final int NUMBER_OF_PRODUCER = 4;
+//    private static final int NUMBER_OF_CONSUMER = 2;
 //
 //    private final AtomicInteger sendMessageCounter = new AtomicInteger(0);
 //    private final AtomicInteger receiveMessageCounter = new AtomicInteger(0);
@@ -64,8 +64,7 @@
 //                }
 //            });
 //        }
-//        endTimeProducer = System.currentTimeMillis();
-//        endTimeConsumer = System.currentTimeMillis();
+//
 //        executorService.shutdown();
 //        try {
 //            if (!executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
@@ -108,7 +107,7 @@
 //        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 //        LOGGER.info("Created a producer from the session to the queue.");
 //
-//        long stopTimeProducer = startTimeProducer + (STOP_TIME * 1000);
+//        long stopTimeProducer = startTimeProducer + (Long.parseLong(STOP_TIME) * 1000);
 //        LOGGER.info("Start sending messages to the queue.");
 //        while (sendMessageCounter.get() < NUMBER_OF_MESSAGES || System.currentTimeMillis() >= stopTimeProducer) {
 //            if (Thread.currentThread().isInterrupted()) {
