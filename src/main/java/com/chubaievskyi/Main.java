@@ -11,8 +11,11 @@ public class Main {
         LOGGER.info("Program start!");
 
 
-        AmazonMQService amazonMQService = new AmazonMQService();
-        amazonMQService.run();
+//        AmazonMQService amazonMQService = new AmazonMQService();
+//        amazonMQService.run();
+
+        MQFactory mqFactory = new MQFactory();
+        mqFactory.run();
 
 //        Properties properties = new PropertiesLoader().loadProperties();
 //        InputReader inputReader = new InputReader(properties);
