@@ -6,7 +6,7 @@ import static com.chubaievskyi.Main.LOGGER;
 
 public class InputReader {
 
-    private static final int DEFAULT_NUMBER_OF_MESSAGES = 10001;
+    private static final int DEFAULT_NUMBER_OF_MESSAGES = 1001;
     private String wireLevelEndpoint;
     private String username;
     private String password;

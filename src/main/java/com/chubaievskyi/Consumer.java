@@ -55,7 +55,7 @@
 //                LOGGER.info("Received Poison Pill. Exiting consumer.");
 //                break;
 //            }
-//            if (receiveMessageCounter.incrementAndGet() % 2 == 0) {
+//            if (receiveMessageCounter.incrementAndGet() % 10000 == 0) {
 //                LOGGER.info("Message received: {}", messageText);
 ////                LOGGER.info("{} message received.", receiveMessageCounter.get());
 //            }

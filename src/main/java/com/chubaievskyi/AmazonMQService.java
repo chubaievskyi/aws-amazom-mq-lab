@@ -129,7 +129,7 @@ public class AmazonMQService {
             TextMessage producerMessage = producerSession.createTextMessage(text);
             producer.send(producerMessage);
 
-            if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
+            if (sendMessageCounter.incrementAndGet() % 1 == 0) {
                 LOGGER.info("Message sent: {}", text);
 //                LOGGER.info("{} message sent.", sendMessageCounter.get());
             }
@@ -175,7 +175,7 @@ public class AmazonMQService {
                 LOGGER.info("Received Poison Pill. Exiting consumer.");
                 break;
             }
-            if (receiveMessageCounter.incrementAndGet() % 10000 == 0) {
+            if (receiveMessageCounter.incrementAndGet() % 1 == 0) {
                 LOGGER.info("Message received: {}", messageText);
 //                LOGGER.info("{} message received.", receiveMessageCounter.get());
             }

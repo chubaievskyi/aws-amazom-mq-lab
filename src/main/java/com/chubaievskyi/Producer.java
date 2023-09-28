@@ -69,7 +69,7 @@
 //            String text = USER_GENERATOR.generateRandomUser();
 //            TextMessage producerMessage = producerSession.createTextMessage(text);
 //            producer.send(producerMessage);
-//            if (sendMessageCounter.incrementAndGet() % 2 == 0) {
+//            if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
 //                LOGGER.info("Message sent: {}", text);
 ////                LOGGER.info("{} message sent.", sendMessageCounter.get());
 //            }
