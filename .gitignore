@@ -7,6 +7,8 @@ target/
 /.idea
 /logfiles
 homework3.iml
+invalid-messages.csv
+valid-messages.csv
 
 ### Eclipse ###
 .apt_generated

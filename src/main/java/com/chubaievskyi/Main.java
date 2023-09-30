@@ -3,6 +3,8 @@ package com.chubaievskyi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class Main {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
@@ -11,11 +13,15 @@ public class Main {
         LOGGER.info("Program start!");
 
 
-        AmazonMQService amazonMQService = new AmazonMQService();
-        amazonMQService.run();
+//        AmazonMQService amazonMQService = new AmazonMQService();
+//        amazonMQService.run();
 
-//        MQFactory mqFactory = new MQFactory();
-//        mqFactory.run();
+        MQFactory mqFactory = new MQFactory();
+        try {
+            mqFactory.run();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
 //        Properties properties = new PropertiesLoader().loadProperties();
 //        InputReader inputReader = new InputReader(properties);
