@@ -6,12 +6,14 @@ import static com.chubaievskyi.Main.LOGGER;
 
 public class InputReader {
 
-    private static final int DEFAULT_NUMBER_OF_MESSAGES = 100001;
+    private static final int DEFAULT_NUMBER_OF_MESSAGES = 10001;
     private String wireLevelEndpoint;
     private String username;
     private String password;
     private String queueName;
-    private String stopTime;
+    private long stopTime;
+    private int numberOfProducer;
+    private int numberOfConsumer;
 
     private int numberOfMessages;
 
@@ -44,7 +46,9 @@ public class InputReader {
         username = properties.getProperty("user.name");
         password = properties.getProperty("password");
         queueName = properties.getProperty("queue.name");
-        stopTime = properties.getProperty("stop.time");
+        stopTime = Long.parseLong(properties.getProperty("stop.time"));
+        numberOfProducer = Integer.parseInt(properties.getProperty("number.of.producer"));
+        numberOfConsumer = Integer.parseInt(properties.getProperty("number.of.consumer"));
     }
 
     public String getWireLevelEndpoint() {
@@ -67,7 +71,15 @@ public class InputReader {
         return queueName;
     }
 
-    public String getStopTime() {
+    public long getStopTime() {
         return stopTime;
+    }
+
+    public int getNumberOfProducer() {
+        return numberOfProducer;
+    }
+
+    public int getNumberOfConsumer() {
+        return numberOfConsumer;
     }
 }
