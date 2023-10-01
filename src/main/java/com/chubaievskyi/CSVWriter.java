@@ -26,7 +26,6 @@ public class CSVWriter {
         try {
             validCsvPrinter = new CSVPrinter(new FileWriter(VALID_FILE_PATH, true), CSVFormat.DEFAULT);
             invalidCsvPrinter = new CSVPrinter(new FileWriter(INVALID_FILE_PATH, true), CSVFormat.DEFAULT);
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

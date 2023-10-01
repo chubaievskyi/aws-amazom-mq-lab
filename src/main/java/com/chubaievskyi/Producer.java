@@ -67,7 +67,7 @@ public class Producer implements Runnable {
                 LOGGER.debug("Producer is interrupted.");
                 break;
             }
-            if (sendMessageCounter.get() >= (NUMBER_OF_MESSAGES - (activeProducerCount.get()))) {
+            if (sendMessageCounter.get() >= (NUMBER_OF_MESSAGES - (activeProducerCount.get() - 1))) {
                 break;
             }
 
