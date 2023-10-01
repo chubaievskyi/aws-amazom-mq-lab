@@ -12,8 +12,8 @@ import java.util.Map;
 public class CSVWriter {
 //    private final Lock lock = new ReentrantLock();
 
-    private static final String VALID_FILE_PATH = "valid-messages.csv";
-    private static final String INVALID_FILE_PATH = "invalid-messages.csv";
+    private static final String VALID_FILE_PATH = "/opt/homework3/valid-messages.csv";
+    private static final String INVALID_FILE_PATH = "/opt/homework3/invalid-messages.csv";
 
     private final CSVPrinter validCsvPrinter;
     private final CSVPrinter invalidCsvPrinter;
