@@ -34,6 +34,7 @@ public class Consumer implements Runnable {
     }
 
     private void receiveMessage() throws JMSException {
+
         Connection consumerConnection = connectionFactory.createConnection();
         consumerConnection.start();
         LOGGER.info("Connection with the consumer is established.");
