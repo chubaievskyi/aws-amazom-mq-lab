@@ -4,58 +4,45 @@ import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import javax.jms.*;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.chubaievskyi.Main.LOGGER;
 
 public class Producer implements Runnable {
 
+    private static final UserGenerator USER_GENERATOR = new UserGenerator();
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
     private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
-//    private static final String WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
-//    private static final String USER_NAME = INPUT_READER.getUsername();
-//    private static final String PASSWORD = INPUT_READER.getPassword();
     private static final String QUEUE_NAME = INPUT_READER.getQueueName();
     private static final long STOP_TIME = INPUT_READER.getStopTime();
     private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
-//    private static final int NUMBER_OF_PRODUCER = INPUT_READER.getNumberOfProducer();
     private static final int NUMBER_OF_CONSUMER = INPUT_READER.getNumberOfConsumer();
 
-
-    private static final UserGenerator USER_GENERATOR = new UserGenerator();
-
     private final AtomicInteger sendMessageCounter;
-
     private final PooledConnectionFactory pooledConnectionFactory;
-//    private final String queueName;
-//    private final int numberOfMessages;
-//    private final int numberOfConsumer;
-//    private final long stopTime;
     private final AtomicInteger activeProducerCount;
-    private long startTimeProducer;
-    private long endTimeProducer;
+    private final long startTimeProducer;
+    private final CountDownLatch producersLatch;
 
-    public Producer(PooledConnectionFactory pooledConnectionFactory, long startTimeProducer, AtomicInteger sendMessageCounter, AtomicInteger activeProducerCount) {
+    public Producer(PooledConnectionFactory pooledConnectionFactory, long startTimeProducer,
+                    AtomicInteger sendMessageCounter, AtomicInteger activeProducerCount, CountDownLatch producersLatch) {
         this.pooledConnectionFactory = pooledConnectionFactory;
-//        this.queueName = inputReader.getQueueName();
-//        this.numberOfMessages = inputReader.getNumberOfMessages();
-//        this.numberOfConsumer = inputReader.getNumberOfConsumer();
-//        this.stopTime = inputReader.getStopTime();
-//        this.activeProducerCount = new AtomicInteger(inputReader.getNumberOfProducer());
         this.activeProducerCount = activeProducerCount;
         this.startTimeProducer = startTimeProducer;
         this.sendMessageCounter = sendMessageCounter;
+        this.producersLatch = producersLatch;
     }
 
     @Override
     public void run() {
-//        startTimeProducer = System.currentTimeMillis();
         try {
             sendMessage();
         } catch (JMSException | IOException e) {
             LOGGER.debug("Error sending a message.", e);
+        } finally {
+            producersLatch.countDown();
         }
-//        endTimeProducer = System.currentTimeMillis();
     }
 
     private void sendMessage() throws JMSException, IOException {
@@ -87,10 +74,9 @@ public class Producer implements Runnable {
             String text = USER_GENERATOR.generateRandomUser();
             TextMessage producerMessage = producerSession.createTextMessage(text);
             producer.send(producerMessage);
-            if (sendMessageCounter.incrementAndGet() % 1 == 0) {
-                LOGGER.info("Message sent: {}", text);
-//                LOGGER.info("{} message sent.", sendMessageCounter.get());
-            }
+//            if (sendMessageCounter.incrementAndGet() % 2 == 0) {
+//                LOGGER.info("Message sent: {}", text);
+//            }
         }
 
         int remainingProducers = activeProducerCount.decrementAndGet();
