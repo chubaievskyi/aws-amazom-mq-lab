@@ -8,12 +8,15 @@ import org.apache.commons.csv.CSVPrinter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Properties;
 
 public class CSVWriter {
 //    private final Lock lock = new ReentrantLock();
 
-    private static final String VALID_FILE_PATH = "./valid-messages.csv";
-    private static final String INVALID_FILE_PATH = "./invalid-messages.csv";
+    private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
+    private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
+    private static final String VALID_FILE_PATH = INPUT_READER.getValidFilePath();
+    private static final String INVALID_FILE_PATH = INPUT_READER.getInvalidFilePath();
 
     private final CSVPrinter validCsvPrinter;
     private final CSVPrinter invalidCsvPrinter;

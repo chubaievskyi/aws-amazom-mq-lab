@@ -14,6 +14,8 @@ public class InputReader {
     private long stopTime;
     private int numberOfProducer;
     private int numberOfConsumer;
+    private String validFilePath;
+    private String invalidFilePath;
 
     private int numberOfMessages;
 
@@ -49,6 +51,8 @@ public class InputReader {
         stopTime = Long.parseLong(properties.getProperty("stop.time"));
         numberOfProducer = Integer.parseInt(properties.getProperty("number.of.producer"));
         numberOfConsumer = Integer.parseInt(properties.getProperty("number.of.consumer"));
+        validFilePath = properties.getProperty("valid.file.path");
+        invalidFilePath = properties.getProperty("invalid.file.path");
     }
 
     public String getWireLevelEndpoint() {
@@ -81,5 +85,13 @@ public class InputReader {
 
     public int getNumberOfConsumer() {
         return numberOfConsumer;
+    }
+
+    public String getValidFilePath() {
+        return validFilePath;
+    }
+
+    public String getInvalidFilePath() {
+        return invalidFilePath;
     }
 }
