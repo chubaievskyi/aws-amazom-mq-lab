@@ -3,7 +3,6 @@ package com.chubaievskyi;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -16,8 +15,6 @@ import static com.chubaievskyi.Main.LOGGER;
 
 public class MQFactory {
     CSVWriter csvWriter = new CSVWriter();
-
-
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
     private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
     private static final String WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
@@ -33,12 +30,11 @@ public class MQFactory {
     private long endTimeProducer;
     private long endTimeConsumer;
 
-    public void run() throws IOException {
+    public void run() {
 
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
         ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_PRODUCER + NUMBER_OF_CONSUMER);
-
         CountDownLatch producersLatch = new CountDownLatch(NUMBER_OF_PRODUCER);
 
         startTimeProducer = System.currentTimeMillis();
