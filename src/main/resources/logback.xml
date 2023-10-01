@@ -9,7 +9,7 @@
 
     <appender name="FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logfiles/app-logger.log</file>
+        <file>/opt/homework3/logfiles/app-logger.log</file>
         <rollingPolicy
                 class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>logfiles/app-logger.%d{yyyy-MM-dd}.log</fileNamePattern>
