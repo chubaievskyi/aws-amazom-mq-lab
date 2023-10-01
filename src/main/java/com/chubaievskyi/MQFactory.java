@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.chubaievskyi.Main.LOGGER;
 
 public class MQFactory {
-    CSVWriter csvWriter = new CSVWriter();
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
     private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
     private static final String WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
@@ -22,6 +21,8 @@ public class MQFactory {
     private static final String PASSWORD = INPUT_READER.getPassword();
     private static final int NUMBER_OF_PRODUCER = INPUT_READER.getNumberOfProducer();
     private static final int NUMBER_OF_CONSUMER = INPUT_READER.getNumberOfConsumer();
+
+    private final CSVWriter csvWriter = new CSVWriter();
     private final AtomicInteger activeProducerCount = new AtomicInteger(NUMBER_OF_PRODUCER);
     private final AtomicInteger sendMessageCounter = new AtomicInteger(0);
     private final AtomicInteger receiveMessageCounter = new AtomicInteger(0);

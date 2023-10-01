@@ -13,10 +13,6 @@ public class Main {
         MQFactory mqFactory = new MQFactory();
         mqFactory.run();
 
-        // TODO: мільйон меседжів за адекватний час
-        // TODO: подивитися іншу бібліотеку для генерації імен
-        // TODO: логери в ексепшинах
-
         LOGGER.info("End of program!");
     }
 }
