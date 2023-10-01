@@ -57,9 +57,9 @@ public class Consumer implements Runnable {
             }
             receiveMessageCounter.incrementAndGet();
             csvWriter.checkAndWriteMessage(messageText);
-//            if (receiveMessageCounter.get() % 2 == 0) {
-//                LOGGER.info("Message received: {}", messageText);
-//            }
+            if (receiveMessageCounter.get() % 10000 == 0) {
+                LOGGER.info("Message received: {}", messageText);
+            }
         }
 
         consumer.close();
