@@ -15,7 +15,7 @@ public class UserGenerator {
     private final Random random;
 
     private static final int MIN_BIRTH_YEAR = 1920;
-    private static final int MAX_BIRTH_YEAR = 2019;
+    private static final int MAX_BIRTH_YEAR = 2020;
     private static final int MAX_MONTH = 12;
     private static final int MAX_DAY = 31;
     private static final int MIN_COUNT = 0;
@@ -29,7 +29,7 @@ public class UserGenerator {
 
     public String generateRandomUser() throws IOException {
 
-        String name = faker.name().fullName();
+        String name = faker.name().firstName();
         String eddr = generateRandomEddr();
         int count = faker.number().numberBetween(MIN_COUNT, MAX_COUNT);
         LocalDate createdAt = LocalDate.now();
