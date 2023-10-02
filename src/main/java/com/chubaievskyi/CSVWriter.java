@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Properties;
 
 public class CSVWriter {
-//    private final Lock lock = new ReentrantLock();
 
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
     private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
@@ -21,6 +20,8 @@ public class CSVWriter {
     private final CSVPrinter validCsvPrinter;
     private final CSVPrinter invalidCsvPrinter;
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
+    //    private final Lock lock = new ReentrantLock();
 
     public CSVWriter() {
         try {
