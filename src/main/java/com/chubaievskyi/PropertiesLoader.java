@@ -1,13 +1,15 @@
 package com.chubaievskyi;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static com.chubaievskyi.Main.LOGGER;
-
 public class PropertiesLoader {
 
+    public static final Logger LOGGER = LoggerFactory.getLogger(PropertiesLoader.class);
     private final Properties properties;
 
     public PropertiesLoader() {

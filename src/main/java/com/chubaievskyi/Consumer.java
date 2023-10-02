@@ -1,6 +1,8 @@
 package com.chubaievskyi;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 import java.util.Properties;
@@ -10,6 +12,7 @@ import static com.chubaievskyi.Main.LOGGER;
 
 public class Consumer implements Runnable {
 
+    public static final Logger LOGGER = LoggerFactory.getLogger(Consumer.class);
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
     private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
     private static final String QUEUE_NAME = INPUT_READER.getQueueName();

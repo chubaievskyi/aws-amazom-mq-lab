@@ -1,16 +1,18 @@
 package com.chubaievskyi;
 
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.jms.*;
-import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.chubaievskyi.Main.LOGGER;
+import java.util.stream.Stream;
 
 public class Producer implements Runnable {
 
+    public static final Logger LOGGER = LoggerFactory.getLogger(Producer.class);
     private static final UserGenerator USER_GENERATOR = new UserGenerator();
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
     private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
@@ -38,14 +40,14 @@ public class Producer implements Runnable {
     public void run() {
         try {
             sendMessage();
-        } catch (JMSException | IOException e) {
+        } catch (JMSException e) {
             LOGGER.debug("Error sending a message.", e);
         } finally {
             producersLatch.countDown();
         }
     }
 
-    private void sendMessage() throws JMSException, IOException {
+    private void sendMessage() throws JMSException {
         Connection producerConnection = pooledConnectionFactory.createConnection();
         producerConnection.start();
         LOGGER.info("Connection with the producer is established.");
@@ -62,22 +64,22 @@ public class Producer implements Runnable {
 
         LOGGER.info("Start sending messages to the queue.");
         long stopTimeProducer = startTimeProducer + (STOP_TIME * 1000);
-        while (sendMessageCounter.get() < NUMBER_OF_MESSAGES || System.currentTimeMillis() >= stopTimeProducer) {
-            if (Thread.currentThread().isInterrupted()) {
-                LOGGER.debug("Producer is interrupted.");
-                break;
-            }
-            if (sendMessageCounter.get() >= (NUMBER_OF_MESSAGES - (activeProducerCount.get() - 1))) {
-                break;
-            }
 
-            String text = USER_GENERATOR.generateRandomUser();
-            TextMessage producerMessage = producerSession.createTextMessage(text);
-            producer.send(producerMessage);
-            if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
-                LOGGER.info("Message sent: {}", text);
-            }
-        }
+        Stream.generate(USER_GENERATOR::generateRandomUser)
+                .limit(NUMBER_OF_MESSAGES)
+                .takeWhile(text -> System.currentTimeMillis() < stopTimeProducer)
+                .filter(text -> sendMessageCounter.get() < (NUMBER_OF_MESSAGES - (activeProducerCount.get() - 1)))
+                .forEach(text -> {
+                    try {
+                        TextMessage producerMessage = producerSession.createTextMessage(text);
+                        producer.send(producerMessage);
+                        if (sendMessageCounter.incrementAndGet() % 10000 == 0) {
+                            LOGGER.info("Message sent: {}", text);
+                        }
+                    } catch (JMSException e) {
+                        LOGGER.debug("Error sending a message.", e);
+                    }
+                });
 
         int remainingProducers = activeProducerCount.decrementAndGet();
         if (remainingProducers == 0) {
