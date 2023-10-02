@@ -2,15 +2,18 @@ package com.chubaievskyi;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.javafaker.Faker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserGenerator {
 
+    public static final Logger LOGGER = LoggerFactory.getLogger(UserGenerator.class);
     private final Faker faker;
     private final ObjectMapper objectMapper;
 
@@ -24,7 +27,7 @@ public class UserGenerator {
         this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     }
 
-    public String generateRandomUser() throws IOException {
+    public String generateRandomUser() {
 
         String name = faker.name().firstName();
         String eddr = generateRandomEddr();
@@ -33,7 +36,12 @@ public class UserGenerator {
 
         User user = new User(name, eddr, count, createdAt);
 
-        return objectMapper.writeValueAsString(user);
+        try {
+            return objectMapper.writeValueAsString(user);
+        } catch (JsonProcessingException e) {
+            LOGGER.debug("Error trying to convert an object to a JSON string", e);
+        }
+        return "";
     }
 
     private String generateRandomEddr() {

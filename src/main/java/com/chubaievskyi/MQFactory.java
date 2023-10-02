@@ -2,6 +2,8 @@ package com.chubaievskyi;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Properties;
@@ -11,9 +13,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.chubaievskyi.Main.LOGGER;
-
 public class MQFactory {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(MQFactory.class);
     private static final Properties PROPERTIES = new PropertiesLoader().loadProperties();
     private static final InputReader INPUT_READER = new InputReader(PROPERTIES);
     private static final String WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();

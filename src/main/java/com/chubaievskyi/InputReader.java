@@ -1,11 +1,13 @@
 package com.chubaievskyi;
 
-import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static com.chubaievskyi.Main.LOGGER;
+import java.util.Properties;
 
 public class InputReader {
 
+    public static final Logger LOGGER = LoggerFactory.getLogger(InputReader.class);
     private static final int DEFAULT_NUMBER_OF_MESSAGES = 50001;
     private String wireLevelEndpoint;
     private String username;
