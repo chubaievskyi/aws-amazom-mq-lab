@@ -42,23 +42,14 @@ public class MQFactory {
 
         startTimeProducer = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_PRODUCER; i++) {
-            Producer producer = new Producer(
-                    pooledConnectionFactory,
-                    startTimeProducer,
-                    sendMessageCounter,
-                    activeProducerCount,
-                    producersLatch
-                    );
+            Producer producer = new Producer(pooledConnectionFactory, startTimeProducer, sendMessageCounter,
+                                             activeProducerCount, producersLatch);
             executorService.submit(producer);
         }
 
         startTimeConsumer = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_CONSUMER; i++) {
-            Consumer consumer = new Consumer(
-                    connectionFactory,
-                    receiveMessageCounter,
-                    csvWriter
-            );
+            Consumer consumer = new Consumer(connectionFactory, receiveMessageCounter, csvWriter);
             executorService.submit(consumer);
         }
 
