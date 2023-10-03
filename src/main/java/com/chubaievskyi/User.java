@@ -9,6 +9,9 @@ public class User {
     private int count;
     private LocalDate createdAt;
 
+    public User() {
+    }
+
     public User(String name, String eddr, int count, LocalDate createdAt) {
         this.name = name;
         this.eddr = eddr;

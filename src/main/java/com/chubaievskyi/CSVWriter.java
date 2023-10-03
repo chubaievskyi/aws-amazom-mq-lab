@@ -29,8 +29,6 @@ public class CSVWriter {
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Validator validator;
 
-    //    private final Lock lock = new ReentrantLock();
-
     public CSVWriter() {
         try {
             validCsvPrinter = new CSVPrinter(new FileWriter(VALID_FILE_PATH, true), CSVFormat.DEFAULT);
@@ -43,7 +41,6 @@ public class CSVWriter {
     }
 
     public void checkAndWriteMessage(String message) {
-//        lock.lock();
         try {
             User user = objectMapper.readValue(message, User.class);
             String name = user.getName();
@@ -61,21 +58,16 @@ public class CSVWriter {
                 invalidCsvPrinter.flush();
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-//            lock.unlock();
+            LOGGER.debug("Error writing a message.", e);
         }
     }
 
     public void close() {
-//        lock.lock();
         try {
             validCsvPrinter.close();
             invalidCsvPrinter.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-//            lock.unlock();
+            LOGGER.debug("Error closing printers.", e);
         }
     }
 }
