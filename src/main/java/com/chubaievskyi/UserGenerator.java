@@ -44,7 +44,7 @@ public class UserGenerator {
         return "";
     }
 
-    private String generateRandomEddr() {
+    public String generateRandomEddr() {
         String date = generateRandomDate();
         String restOfEddr = faker.numerify("#####");
         return String.format("%s-%s", date, restOfEddr);

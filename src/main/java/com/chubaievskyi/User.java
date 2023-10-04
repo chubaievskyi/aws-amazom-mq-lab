@@ -2,6 +2,7 @@ package com.chubaievskyi;
 
 import java.time.LocalDate;
 
+@MyValidation
 public class User {
 
     private String name;
