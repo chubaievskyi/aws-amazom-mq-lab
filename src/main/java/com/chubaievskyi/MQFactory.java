@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -37,39 +36,27 @@ public class MQFactory {
 
         ActiveMQConnectionFactory connectionFactory = createActiveMQConnectionFactory();
         PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
-        ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_PRODUCER + NUMBER_OF_CONSUMER);
-        CountDownLatch producersLatch = new CountDownLatch(NUMBER_OF_PRODUCER);
+
+        ExecutorService producerExecutor = Executors.newFixedThreadPool(NUMBER_OF_PRODUCER);
+        ExecutorService consumerExecutor = Executors.newFixedThreadPool(NUMBER_OF_CONSUMER);
 
         startTimeProducer = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_PRODUCER; i++) {
-            Producer producer = new Producer(pooledConnectionFactory, startTimeProducer, sendMessageCounter,
-                                             activeProducerCount, producersLatch);
-            executorService.submit(producer);
+            Producer producer = new Producer(pooledConnectionFactory, startTimeProducer,
+                                            sendMessageCounter, activeProducerCount);
+            producerExecutor.submit(producer);
         }
 
         startTimeConsumer = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_CONSUMER; i++) {
             Consumer consumer = new Consumer(connectionFactory, receiveMessageCounter, csvWriter);
-            executorService.submit(consumer);
+            consumerExecutor.submit(consumer);
         }
 
-        try {
-            producersLatch.await();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
+        shutdownAndAwaitTermination(producerExecutor, "producer");
         endTimeProducer = System.currentTimeMillis();
-        executorService.shutdown();
 
-        try {
-            if (!executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
-                LOGGER.error("Not all threads have terminated.");
-            }
-        } catch (InterruptedException e) {
-            LOGGER.debug("Executor service interrupted.", e);
-            Thread.currentThread().interrupt();
-        }
+        shutdownAndAwaitTermination(consumerExecutor, "consumer");
         endTimeConsumer = System.currentTimeMillis();
 
         csvWriter.close();
@@ -93,6 +80,18 @@ public class MQFactory {
         pooledConnectionFactory.setMaxConnections(100);
         LOGGER.info("Created a pooled connection factory.");
         return pooledConnectionFactory;
+    }
+
+    private void shutdownAndAwaitTermination(ExecutorService executor, String threadType) {
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
+                LOGGER.error("Not all {} threads have terminated.", threadType);
+            }
+        } catch (InterruptedException e) {
+            LOGGER.debug("Executor service interrupted for " + threadType + " threads.", e);
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void printResult() {

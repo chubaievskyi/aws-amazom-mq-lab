@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -25,15 +24,13 @@ public class Producer implements Runnable {
     private final PooledConnectionFactory pooledConnectionFactory;
     private final AtomicInteger activeProducerCount;
     private final long startTimeProducer;
-    private final CountDownLatch producersLatch;
 
     public Producer(PooledConnectionFactory pooledConnectionFactory, long startTimeProducer,
-                    AtomicInteger sendMessageCounter, AtomicInteger activeProducerCount, CountDownLatch producersLatch) {
+                    AtomicInteger sendMessageCounter, AtomicInteger activeProducerCount) {
         this.pooledConnectionFactory = pooledConnectionFactory;
         this.activeProducerCount = activeProducerCount;
         this.startTimeProducer = startTimeProducer;
         this.sendMessageCounter = sendMessageCounter;
-        this.producersLatch = producersLatch;
     }
 
     @Override
@@ -42,8 +39,6 @@ public class Producer implements Runnable {
             sendMessage();
         } catch (JMSException e) {
             LOGGER.debug("Error sending a message.", e);
-        } finally {
-            producersLatch.countDown();
         }
     }
 
