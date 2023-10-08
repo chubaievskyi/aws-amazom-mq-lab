@@ -8,7 +8,7 @@ import java.util.Properties;
 public class InputReader {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(InputReader.class);
-    private static final int DEFAULT_NUMBER_OF_MESSAGES = 10001;
+    private static final int DEFAULT_NUMBER_OF_MESSAGES = 100001;
     private String wireLevelEndpoint;
     private String username;
     private String password;
