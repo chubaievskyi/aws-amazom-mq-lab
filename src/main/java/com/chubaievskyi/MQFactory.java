@@ -120,7 +120,7 @@ public class MQFactory {
         }
         executor.shutdown();
         try {
-            if (!executor.awaitTermination(waitingTime, TimeUnit.NANOSECONDS)) {
+            if (!executor.awaitTermination(waitingTime, TimeUnit.SECONDS)) {
                 LOGGER.error("Not all {} threads have terminated.", threadType);
             }
         } catch (InterruptedException e) {
