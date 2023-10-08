@@ -16,11 +16,6 @@ public class Validator implements ConstraintValidator<MyValidation, User> {
     public static final int COEFFICIENT_3 = 1;
 
     @Override
-    public void initialize(MyValidation constraintAnnotation) {
-        // The initialize method is empty because it does not require additional logic.
-    }
-
-    @Override
     public boolean isValid(User user, ConstraintValidatorContext constraintValidatorContext) {
         if (user == null) {
             return false;

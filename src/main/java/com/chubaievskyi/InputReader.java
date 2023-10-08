@@ -32,7 +32,7 @@ public class InputReader {
         String numberOfMessagesProperty = System.getProperty("nm");
         if (numberOfMessagesProperty == null) {
             LOGGER.error("The number of messages to be generated is not specified. " +
-                    "The default number (1001) will be generated.");
+                    "The default number (10001) will be generated.");
             numberOfMessages = DEFAULT_NUMBER_OF_MESSAGES;
         } else {
             try {

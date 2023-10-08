@@ -64,7 +64,6 @@ class ProducerTest {
 
         long elapsedTime = System.currentTimeMillis() - startTimeProducer;
         assertTrue((elapsedTime - stopTime * 1000) <= 1000, "Sending messages took longer than expected");
-        producerThread.interrupt();
     }
 
     @Test

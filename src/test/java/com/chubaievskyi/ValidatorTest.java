@@ -45,7 +45,7 @@ class ValidatorTest {
 
     @Test
     void testIsValidWithInvalidName() {
-        User user = new User("1234567", "19911120-07605", 25, localDate);
+        User user = new User("User", "19911120-07605", 25, localDate);
         boolean result = validator.isValid(user, context);
         assertFalse(result);
     }
