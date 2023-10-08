@@ -65,11 +65,40 @@ public class MQFactory {
             consumerExecutor.submit(consumer);
         }
 
-        shutdownAndAwaitTermination(producerExecutor, "producer");
+
+        producerExecutor.shutdown();
+
+        double expectancyRatio = 1.05;
+        long waitingTime = (long) (STOP_TIME * expectancyRatio);
+
+
+        try {
+            if (!producerExecutor.awaitTermination(waitingTime, TimeUnit.SECONDS)) {
+                LOGGER.error("Not all producer threads have terminated.");
+            }
+        } catch (InterruptedException e) {
+            LOGGER.debug("Executor service interrupted for producer threads.", e);
+            producerExecutor.shutdownNow();
+        }
         endTimeProducer = System.currentTimeMillis();
 
-        shutdownAndAwaitTermination(consumerExecutor, "consumer");
+        consumerExecutor.shutdown();
+        try {
+            if (!consumerExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS)) {
+                LOGGER.error("Not all consumer threads have terminated.");
+            }
+        } catch (InterruptedException e) {
+            LOGGER.debug("Executor service interrupted for consumer threads.", e);
+            consumerExecutor.shutdownNow();
+        }
         endTimeConsumer = System.currentTimeMillis();
+
+
+//        shutdownAndAwaitTermination(producerExecutor, "producer");
+//        endTimeProducer = System.currentTimeMillis();
+
+//        shutdownAndAwaitTermination(consumerExecutor, "consumer");
+//        endTimeConsumer = System.currentTimeMillis();
 
         csvWriter.close();
         pooledConnectionFactory.stop();
@@ -110,26 +139,26 @@ public class MQFactory {
         return new CSVWriter(validCsvPrinter, invalidCsvPrinter, validator);
     }
 
-    private void shutdownAndAwaitTermination(ExecutorService executor, String threadType) {
-
-        executor.shutdown();
-
-        double expectancyRatio = 1.05;
-        long waitingTime;
-        if (threadType.equals("producer")) {
-            waitingTime = (long) (STOP_TIME * expectancyRatio);
-        } else {
-            waitingTime = Long.MAX_VALUE;
-        }
-        try {
-            if (!executor.awaitTermination(waitingTime, TimeUnit.SECONDS)) {
-                LOGGER.error("Not all {} threads have terminated.", threadType);
-            }
-        } catch (InterruptedException e) {
-            LOGGER.debug("Executor service interrupted for " + threadType + " threads.", e);
-            executor.shutdownNow();
-        }
-    }
+//    private void shutdownAndAwaitTermination(ExecutorService executor, String threadType) {
+//
+//        executor.shutdown();
+//
+//        double expectancyRatio = 1.05;
+//        long waitingTime;
+//        if (threadType.equals("producer")) {
+//            waitingTime = (long) (STOP_TIME * expectancyRatio);
+//        } else {
+//            waitingTime = Long.MAX_VALUE;
+//        }
+//        try {
+//            if (!executor.awaitTermination(waitingTime, TimeUnit.SECONDS)) {
+//                LOGGER.error("Not all {} threads have terminated.", threadType);
+//            }
+//        } catch (InterruptedException e) {
+//            LOGGER.debug("Executor service interrupted for " + threadType + " threads.", e);
+//            executor.shutdownNow();
+//        }
+//    }
 
     private void printResult() {
         double producerTime = (double) (endTimeProducer - startTimeProducer) / 1000;
