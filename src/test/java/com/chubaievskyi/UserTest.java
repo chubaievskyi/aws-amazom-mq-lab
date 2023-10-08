@@ -20,10 +20,10 @@ class UserTest {
     @Test
     void testParameterizedConstructor() {
         LocalDate createdAt = LocalDate.now();
-        User user = new User("Chubaievskyi", "19900630-1234", 32, createdAt);
+        User user = new User("User", "19900630-1234", 32, createdAt);
 
         assertNotNull(user);
-        assertEquals("Chubaievskyi", user.getName());
+        assertEquals("User", user.getName());
         assertEquals("19900630-1234", user.getEddr());
         assertEquals(32, user.getCount());
         assertEquals(createdAt, user.getCreatedAt());
@@ -33,8 +33,8 @@ class UserTest {
     void testGettersAndSetters() {
         User user = new User();
 
-        user.setName("Pasha");
-        assertEquals("Pasha", user.getName());
+        user.setName("User");
+        assertEquals("User", user.getName());
 
         user.setEddr("19911120-1234");
         assertEquals("19911120-1234", user.getEddr());

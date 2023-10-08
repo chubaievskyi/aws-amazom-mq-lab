@@ -8,8 +8,6 @@ import javax.jms.*;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.chubaievskyi.Main.LOGGER;
-
 public class Consumer implements Runnable {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(Consumer.class);
