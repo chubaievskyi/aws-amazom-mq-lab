@@ -111,14 +111,21 @@ public class MQFactory {
     }
 
     private void shutdownAndAwaitTermination(ExecutorService executor, String threadType) {
+        double expectancyRatio = 1.1;
+        long waitingTime;
+        if (threadType.equals("producer")) {
+            waitingTime = (long) (STOP_TIME * expectancyRatio);
+        } else {
+            waitingTime = Long.MAX_VALUE;
+        }
         executor.shutdown();
         try {
-            if (!executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
+            if (!executor.awaitTermination(waitingTime, TimeUnit.NANOSECONDS)) {
                 LOGGER.error("Not all {} threads have terminated.", threadType);
             }
         } catch (InterruptedException e) {
             LOGGER.debug("Executor service interrupted for " + threadType + " threads.", e);
-            Thread.currentThread().interrupt();
+            executor.shutdownNow();
         }
     }
 
