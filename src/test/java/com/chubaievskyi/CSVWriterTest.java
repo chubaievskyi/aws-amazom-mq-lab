@@ -50,8 +50,8 @@ class CSVWriterTest {
     @Test
     void testCheckAndWriteMessage_InvalidUser() throws IOException {
 
-        User invalidUser = new User("John", "00000000-00009", 0, LocalDate.ofYearDay(2023, 1));
-        String invalidUserJson = "{ \"name\":\"John\", \"eddr\":\"00000000-00009\", \"count\":0, \"createdAt\":\"2023-01-01\" }";
+        User invalidUser = new User("User", "00000000-00009", 0, LocalDate.ofYearDay(2023, 1));
+        String invalidUserJson = "{ \"name\":\"User\", \"eddr\":\"00000000-00009\", \"count\":0, \"createdAt\":\"2023-01-01\" }";
 
         ConstraintViolation<User> nameViolation = Mockito.mock(ConstraintViolation.class);
         Set<ConstraintViolation<User>> violations = new HashSet<>();
@@ -60,7 +60,7 @@ class CSVWriterTest {
         when(validator.validate(any(User.class))).thenReturn(violations);
         csvWriter.checkAndWriteMessage(invalidUserJson);
 
-        verify(invalidCsvPrinter).printRecord("John", "00000000-00009", 0, "2023-01-01");
+        verify(invalidCsvPrinter).printRecord("User", "00000000-00009", 0, "2023-01-01");
         verify(invalidCsvPrinter).flush();
     }
 }

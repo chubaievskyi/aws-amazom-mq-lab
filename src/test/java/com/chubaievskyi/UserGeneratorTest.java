@@ -8,14 +8,14 @@ class UserGeneratorTest {
     @Test
     void testGenerateRandomUser() {
         UserGenerator userGenerator = new UserGenerator();
-        String randomUserJson = userGenerator.generateRandomUser();
+        String randomUser = userGenerator.generateRandomUser();
 
-        assertNotNull(randomUserJson);
-        assertFalse(randomUserJson.isEmpty());
-        assertTrue(randomUserJson.contains("name"));
-        assertTrue(randomUserJson.contains("eddr"));
-        assertTrue(randomUserJson.contains("count"));
-        assertTrue(randomUserJson.contains("createdAt"));
+        assertNotNull(randomUser);
+        assertFalse(randomUser.isEmpty());
+        assertTrue(randomUser.contains("name"));
+        assertTrue(randomUser.contains("eddr"));
+        assertTrue(randomUser.contains("count"));
+        assertTrue(randomUser.contains("createdAt"));
     }
 
     @Test

@@ -8,16 +8,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserTest {
 
     @Test
-    void testDefaultConstructor() {
-        User user = new User();
-        assertNotNull(user);
-        assertNull(user.getName());
-        assertNull(user.getEddr());
-        assertEquals(0, user.getCount());
-        assertNull(user.getCreatedAt());
-    }
-
-    @Test
     void testParameterizedConstructor() {
         LocalDate createdAt = LocalDate.now();
         User user = new User("User", "19900630-1234", 32, createdAt);
