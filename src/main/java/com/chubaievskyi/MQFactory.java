@@ -1,10 +1,17 @@
 package com.chubaievskyi;
 
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -20,10 +27,15 @@ public class MQFactory {
     private static final String WIRE_LEVEL_ENDPOINT = INPUT_READER.getWireLevelEndpoint();
     private static final String USER_NAME = INPUT_READER.getUsername();
     private static final String PASSWORD = INPUT_READER.getPassword();
+    private static final String VALID_FILE_PATH = INPUT_READER.getValidFilePath();
+    private static final String INVALID_FILE_PATH = INPUT_READER.getInvalidFilePath();
+    private static final String QUEUE_NAME = INPUT_READER.getQueueName();
+    private static final int NUMBER_OF_MESSAGES = INPUT_READER.getNumberOfMessages();
     private static final int NUMBER_OF_PRODUCER = INPUT_READER.getNumberOfProducer();
     private static final int NUMBER_OF_CONSUMER = INPUT_READER.getNumberOfConsumer();
+    private static final long STOP_TIME = INPUT_READER.getStopTime();
 
-    private final CSVWriter csvWriter = new CSVWriter();
+    private final CSVWriter csvWriter = createCSVWriter();
     private final AtomicInteger activeProducerCount = new AtomicInteger(NUMBER_OF_PRODUCER);
     private final AtomicInteger sendMessageCounter = new AtomicInteger(0);
     private final AtomicInteger receiveMessageCounter = new AtomicInteger(0);
@@ -42,8 +54,8 @@ public class MQFactory {
 
         startTimeProducer = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_PRODUCER; i++) {
-            Producer producer = new Producer(pooledConnectionFactory, startTimeProducer,
-                                            sendMessageCounter, activeProducerCount);
+            Producer producer = new Producer(pooledConnectionFactory, startTimeProducer, sendMessageCounter,
+                        activeProducerCount, QUEUE_NAME, STOP_TIME, NUMBER_OF_MESSAGES, NUMBER_OF_CONSUMER);
             producerExecutor.submit(producer);
         }
 
@@ -80,6 +92,22 @@ public class MQFactory {
         pooledConnectionFactory.setMaxConnections(100);
         LOGGER.info("Created a pooled connection factory.");
         return pooledConnectionFactory;
+    }
+
+    private CSVWriter createCSVWriter() {
+        CSVPrinter validCsvPrinter;
+        CSVPrinter invalidCsvPrinter;
+        Validator validator;
+
+        try {
+            validCsvPrinter = new CSVPrinter(new FileWriter(VALID_FILE_PATH, true), CSVFormat.DEFAULT);
+            invalidCsvPrinter = new CSVPrinter(new FileWriter(INVALID_FILE_PATH, true), CSVFormat.DEFAULT);
+            ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+            validator = factory.getValidator();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return new CSVWriter(validCsvPrinter, invalidCsvPrinter, validator);
     }
 
     private void shutdownAndAwaitTermination(ExecutorService executor, String threadType) {
